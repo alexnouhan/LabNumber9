@@ -35,6 +35,8 @@ public class LabNumber9 {
 		// Lists for tracking the users order
 		ArrayList<String> userItems = new ArrayList<String>();
 		ArrayList<Double> userPrices = new ArrayList<Double>();
+		ArrayList<Integer> userQuantity = new ArrayList<Integer>();
+		int counter = 0;
 
 		// Greet User
 		System.out.println("Welcome to Guenther's Marketplace!");
@@ -45,50 +47,47 @@ public class LabNumber9 {
 			showMenu(menu);
 
 			int order = getOrder(scan, items, "What would you like to order?: ");
+			int quant = getInt(scan, "How many would you like?: ", 1);
 
-			//receives int from the getOrder method and adds the items and prices to the user Lists
+			// receives int from the getOrder method and adds the items and prices to the
+			// user Lists
 			userItems.add(items[order]);
 			userPrices.add(prices[order]);
+			userQuantity.add(quant);
 
-			System.out.println("Adding " + items[order] + " to cart at $" + prices[order]);
+			System.out.println("Adding " + userQuantity.get(counter) + " " + items[order] + "s to cart at $"
+					+ prices[order] + " each.");
 
 			System.out.println();
 
-			//continue shopping loop
+			// continue shopping loop
 			while (flag) {
 				int go = getGo(scan, "Would you like to order anything else (y/n/cart)?: ");
 
-				//conditions for user choices to continue, quit, or show cart
+				// conditions for user choices to continue, quit, or show cart
 				if (go == 1) {
+					counter += 1;
 					break;
 				} else if (go == 2) {
 					flag = false;
 				} else if (go == 3) {
 					System.out.println();
 					System.out.println("Your cart:");
-					for (int i = 0; i < userItems.size(); i++) {
-						System.out.printf("%-18s $%s\n", userItems.get(i), userPrices.get(i));
-					}
-					cartTotal(userPrices);
+					showCart(userItems, userPrices, userQuantity);
 					continue;
 				}
 			}
 		}
 
-		//show shopping summary and end program
+		// show shopping summary and end program
 		System.out.println();
 		System.out.println("Thanks for your order!");
 		System.out.println("Here's what you got:");
-
-		for (int i = 0; i < userItems.size(); i++) {
-			System.out.printf("%-18s $%s\n", userItems.get(i), userPrices.get(i));
-		}
-		
-		cartTotal(userPrices);
+		showCart(userItems, userPrices, userQuantity);
 		cartAverage(userPrices);
 		cartHigh(userItems, userPrices);
 		cartLow(userItems, userPrices);
-		
+
 		scan.close();
 
 	}
@@ -99,18 +98,51 @@ public class LabNumber9 {
 		menu.forEach((i, p) -> System.out.printf("%-18s $%s \n", i, p));
 		;
 	}
-	
-	public static void cartTotal(ArrayList<Double> cart) {
+
+	public static void showCart(ArrayList<String> items, ArrayList<Double> prices, ArrayList<Integer> quant) {
+		System.out.printf("%-18s %-10s %-10s %s\n", "Item", "Price", "Quantity", "Line Total");
+		System.out.println("____________________________________________________");
+		for (int i = 0; i < items.size(); i++) {
+			System.out.printf("%-18s $%-10s %-10s $%s\n", items.get(i), prices.get(i), quant.get(i),
+					lineTotal(prices, quant, i));
+		}
+		cartTotal(prices, quant);
+	}
+
+	public static void cartTotal(ArrayList<Double> price, ArrayList<Integer> quant) {
 		double sum = 0;
-		for (double num : cart) {
+		for (double num : price) {
 			sum += num;
 		}
 		sum = round(sum, 2);
-		System.out.println("__________________________");
-		System.out.printf("%-18s $%s\n", "Total",sum);
+		System.out.println("____________________________________________________");
+		System.out.printf("%-18s $%-10s %-10s $%s\n", "Total", sum, quantTotal(quant), subTotal(price, quant));
 		System.out.println();
 	}
-	
+
+	public static double lineTotal(ArrayList<Double> price, ArrayList<Integer> quant, int i) {
+		double sub = 0;
+		sub = (price.get(i) * quant.get(i));
+		sub = round(sub, 2);
+		return sub;
+	}
+
+	public static int quantTotal(ArrayList<Integer> quant) {
+		int sum = 0;
+		for (double num : quant)
+			sum += num;
+		return sum;
+	}
+
+	public static double subTotal(ArrayList<Double> price, ArrayList<Integer> quant) {
+		double sub = 0;
+		for (int i = 0; i < price.size(); i++) {
+			sub += (price.get(i) * quant.get(i));
+		}
+		sub = round(sub, 2);
+		return sub;
+	}
+
 	public static void cartAverage(ArrayList<Double> cart) {
 		double avg = 0;
 		double sum = 0;
@@ -121,14 +153,14 @@ public class LabNumber9 {
 		avg = round(avg, 2);
 		System.out.println("Average price per item in order was $" + avg);
 	}
-	
+
 	public static void cartHigh(ArrayList<String> items, ArrayList<Double> cart) {
 		Double max = Collections.max(cart);
 		int i = cart.indexOf(max);
 		String item = items.get(i);
 		System.out.println("The most expensive item you ordered is the " + item);
 	}
-	
+
 	public static void cartLow(ArrayList<String> items, ArrayList<Double> cart) {
 		Double min = Collections.min(cart);
 		int i = cart.indexOf(min);
@@ -161,6 +193,37 @@ public class LabNumber9 {
 		return num;
 	}
 
+	public static int getInt(Scanner sc, String prompt) {
+		int i = 0;
+		boolean isValid = false;
+		while (isValid == false) {
+			System.out.print(prompt);
+			if (sc.hasNextInt()) {
+				i = sc.nextInt();
+				isValid = true;
+			} else {
+				System.out.println("Error! Invalid integer value. Try again.");
+			}
+			sc.nextLine(); // discard any other data entered on the line
+		}
+		return i;
+	}
+
+	public static int getInt(Scanner sc, String prompt, int min) {
+		int i = 0;
+		boolean isValid = false;
+		while (isValid == false) {
+			i = getInt(sc, prompt);
+			if (i < min)
+				System.out.println("Error! Number must be " + min + " or greater.");
+			else if (i > 1000)
+				System.out.println("We don't have that many!");
+			else
+				isValid = true;
+		}
+		return i;
+	}
+
 	public static int getGo(Scanner scan, String prompt) {
 		String go = "";
 		int num = 0;
@@ -191,13 +254,14 @@ public class LabNumber9 {
 		sc.nextLine(); // discard any other data entered on the line
 		return s;
 	}
-	
+
 	private static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
-	 
-	    BigDecimal bd = new BigDecimal(Double.toString(value));
-	    bd = bd.setScale(places, RoundingMode.HALF_UP);
-	    return bd.doubleValue();
+		if (places < 0)
+			throw new IllegalArgumentException();
+
+		BigDecimal bd = new BigDecimal(Double.toString(value));
+		bd = bd.setScale(places, RoundingMode.HALF_UP);
+		return bd.doubleValue();
 	}
 
 }
